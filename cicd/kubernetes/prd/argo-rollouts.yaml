@@ -1,26 +1,26 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: userservice-demo
+  name: user-react-demo-rollout
 spec:
   replicas: 2
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: userservice-demo-rollout
+      app: user-react-demo-rollout
   template:
     metadata:
       labels:
-        app: userservice-demo-rollout
+        app: user-react-demo-rollout
     spec:
       containers:
-        - name: userservice-demo
-          image: vcixoe45.private-ncr.gov-ntruss.com/userservice-demo:latest
+        - name: user-react-demo
+          image: vcixoe45.private-ncr.gov-ntruss.com/user-react-demo:latest
           env:
-          - name: SPRING_PROFILE
-            value: prd
+          - name: DEBUG
+            value: "1"
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           imagePullPolicy: Always
       affinity:
         nodeAffinity:
@@ -35,6 +35,6 @@ spec:
         - name: alertnow-docker-rego-secret
   strategy:
     blueGreen:
-      activeService: userservice-demo-active
-      previewService: userservice-demo-preview
+      activeService: user-react-demo-active
+      previewService: user-react-demo-preview
       autoPromotionEnabled: false
