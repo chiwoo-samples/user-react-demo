@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: userservice-demo
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: userservice-demo-rollout
+  template:
+    metadata:
+      labels:
+        app: userservice-demo-rollout
+    spec:
+      containers:
+        - name: userservice-demo
+          image: vcixoe45.private-ncr.gov-ntruss.com/userservice-demo:latest
+          env:
+          - name: SPRING_PROFILE
+            value: prd
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "kubernetes.io/os"
+                    operator: In
+                    values:
+                      - linux
+      imagePullSecrets:
+        - name: alertnow-docker-rego-secret
+  strategy:
+    blueGreen:
+      activeService: userservice-demo-active
+      previewService: userservice-demo-preview
+      autoPromotionEnabled: false

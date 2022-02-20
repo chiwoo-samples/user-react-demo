@@ -1,0 +1,22 @@
+---
+version: "3"
+
+services:
+  user-react:
+    image: user-react-demo:1.0.0
+    container_name: user-react
+    restart: always
+    ports:
+      - 80:80
+    environment:
+      - DEBUG=1
+    networks:
+      - default
+      - mynet-bridge
+
+networks:
+  mynet-bridge:
+    driver: bridge
+
+# docker network create --driver bridge --ip-range 172.21.1.0/24 --subnet 172.21.1.0/24 --gateway 172.21.1.1 mynet-bridge
+# docker network ls
