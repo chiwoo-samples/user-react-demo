@@ -9,6 +9,6 @@ ADD ./build ./build
 
 RUN rm /etc/nginx/conf.d/default.conf
 
-COPY ./cicd/nginx/nginx.conf /etc/nginx/conf.d
+COPY ./cicd/nginx/nginx.conf /etc/nginx/conf.d/nginx.conf
 
 EXPOSE 80
