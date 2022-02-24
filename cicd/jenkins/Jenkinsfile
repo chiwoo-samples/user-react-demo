@@ -33,6 +33,48 @@ pipeline {
             }
         }
 
+        stage('Build-Image') {
+            agent { label 'finops-jenkins' }
+            steps {
+                sh 'ls -aL ./build'
+                sh 'docker build -f ./cicd/docker/Dockerfile -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest .'
+            }
+        }
+
+        stage('Push-image') {
+            agent { label 'finops-jenkins' }
+            steps {
+                withCredentials([
+                    string(credentialsId: 'DOCKER_REGISTRY_ID', variable: 'DOCKER_REGISTRY_ID'),
+                    string(credentialsId: 'DOCKER_REGISTRY_PASSWD', variable: 'DOCKER_REGISTRY_PASSWD')
+                ]) {
+                    sh 'echo "${DOCKER_REGISTRY_PASSWD}" | docker login --username ${DOCKER_REGISTRY_ID} --password-stdin ${DOCKER_REGISTRY}'
+                }
+                sh 'docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}'
+                sh 'docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest'
+                sh 'ls -Al'
+            }
+        }
+
+        stage('argo-deploy') {
+            agent {
+                docker {
+                    image 'quay.io/argoproj/kubectl-argo-rollouts:master'
+                    args "--entrypoint=''"
+                }
+            }
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'kubeconfig')]) {
+                    sh 'kubectl-argo-rollouts get rollout ${IMAGE_NAME} -n default --kubeconfig ${kubeconfig}'
+                    sh 'kubectl-argo-rollouts set image ${IMAGE_NAME} ${IMAGE_NAME}=${DOCKER_REGISTRY_PRIVATE}/${IMAGE_NAME}:${BUILD_NUMBER} -n default --kubeconfig ${kubeconfig}'
+                    sh 'sleep 5'
+                    sh 'kubectl-argo-rollouts promote ${IMAGE_NAME} --full -n default --kubeconfig ${kubeconfig}'
+                    sh 'sleep 20'
+                    sh 'kubectl-argo-rollouts get rollout ${IMAGE_NAME} -n default --kubeconfig ${kubeconfig}'
+                }
+            }
+        }
+
     }
 
     post {
