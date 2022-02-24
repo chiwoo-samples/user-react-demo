@@ -37,7 +37,7 @@ pipeline {
             agent { label 'finops-jenkins' }
             steps {
                 sh 'ls -aL ./build'
-                sh 'docker build -f ./cicd/docker/Dockerfile -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest .'
+                sh 'docker build -f ./cicd/docker/prd.Dockerfile -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest .'
             }
         }
 
@@ -67,9 +67,9 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'kubeconfig')]) {
                     sh 'kubectl-argo-rollouts get rollout ${IMAGE_NAME} -n default --kubeconfig ${kubeconfig}'
                     sh 'kubectl-argo-rollouts set image ${IMAGE_NAME} ${IMAGE_NAME}=${DOCKER_REGISTRY_PRIVATE}/${IMAGE_NAME}:${BUILD_NUMBER} -n default --kubeconfig ${kubeconfig}'
-                    sh 'sleep 5'
+                    sh 'sleep 2'
                     sh 'kubectl-argo-rollouts promote ${IMAGE_NAME} --full -n default --kubeconfig ${kubeconfig}'
-                    sh 'sleep 20'
+                    sh 'sleep 30'
                     sh 'kubectl-argo-rollouts get rollout ${IMAGE_NAME} -n default --kubeconfig ${kubeconfig}'
                 }
             }
