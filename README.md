@@ -44,8 +44,6 @@ npm run build
 ```
 docker-compose -f ./cicd/docker/docker-compose.yaml up -d
 
- 
-
 # Down
 # docker-compose -f ./cicd/docker/docker-compose.yaml down
 ```
